@@ -1,0 +1,420 @@
+firewall {
+    group {
+        address-group ALL-V4-SUBNET-ADDRS {
+            address "192.168.1.100-192.168.1.254"
+            address "192.168.2.100-192.168.2.254"
+        }
+        interface-group LANINFS {
+            interface "br0"
+            interface "br1"
+        }
+    }
+    ipv4 {
+        forward {
+            filter {
+                default-action "drop"
+                rule 10 {
+                    action "accept"
+                    state "established"
+                    state "related"
+                }
+                rule 20 {
+                    action "accept"
+                    outbound-interface {
+                        name "pppoe0"
+                    }
+                    state "new"
+                }
+                rule 30 {
+                    action "accept"
+                    outbound-interface {
+                        name "br1"
+                    }
+                    state "new"
+                }
+            }
+        }
+        input {
+            filter {
+                default-action "drop"
+                rule 10 {
+                    action "accept"
+                    state "established"
+                }
+                rule 20 {
+                    action "accept"
+                    state "related"
+                }
+                rule 30 {
+                    action "accept"
+                    description "allow DNS"
+                    destination {
+                        port "domain"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "tcp_udp"
+                    state "new"
+                }
+                rule 41 {
+                    action "accept"
+                    description "allow dhcp client communications"
+                    destination {
+                        port "bootps"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "udp"
+                }
+                rule 50 {
+                    action "accept"
+                    description "allow lan ping"
+                    icmp {
+                        type-name "echo-request"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "icmp"
+                    state "new"
+                }
+                rule 60 {
+                    action "accept"
+                    description "allow private LAN ssh"
+                    destination {
+                        port "ssh"
+                    }
+                    inbound-interface {
+                        name "br0"
+                    }
+                    protocol "tcp"
+                    state "new"
+                }
+            }
+        }
+    }
+    ipv6 {
+        forward {
+            filter {
+                default-action "drop"
+                rule 10 {
+                    action "accept"
+                    state "established"
+                    state "related"
+                }
+                rule 20 {
+                    action "accept"
+                    outbound-interface {
+                        name "pppoe0"
+                    }
+                    state "new"
+                }
+                rule 30 {
+                    action "accept"
+                    outbound-interface {
+                        name "br1"
+                    }
+                    state "new"
+                }
+            }
+        }
+        input {
+            filter {
+                default-action "drop"
+                rule 10 {
+                    action "accept"
+                    state "established"
+                }
+                rule 20 {
+                    action "accept"
+                    state "related"
+                }
+                rule 30 {
+                    action "accept"
+                    description "allow DNS"
+                    destination {
+                        port "domain"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "tcp_udp"
+                    state "new"
+                }
+                rule 50 {
+                    action "accept"
+                    description "allow lan ping6"
+                    icmpv6 {
+                        type-name "echo-request"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "icmpv6"
+                    state "new"
+                }
+                rule 60 {
+                    action "accept"
+                    description "allow private LAN ssh6"
+                    destination {
+                        port "ssh"
+                    }
+                    inbound-interface {
+                        name "br0"
+                    }
+                    protocol "tcp"
+                    state "new"
+                }
+                rule 70 {
+                    action "accept"
+                    description "allow ndp"
+                    icmpv6 {
+                        type-name "nd-router-solicit"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "icmpv6"
+                }
+                rule 71 {
+                    action "accept"
+                    icmpv6 {
+                        type-name "nd-router-advert"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "icmpv6"
+                }
+                rule 72 {
+                    action "accept"
+                    icmpv6 {
+                        type-name "nd-neighbor-solicit"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "icmpv6"
+                }
+                rule 73 {
+                    action "accept"
+                    icmpv6 {
+                        type-name "nd-neighbor-advert"
+                    }
+                    inbound-interface {
+                        group "LANINFS"
+                    }
+                    protocol "icmpv6"
+                }
+                rule 80 {
+                    action "accept"
+                    description "allow ra from PPPoE interface"
+                    icmpv6 {
+                        type-name "nd-router-advert"
+                    }
+                    inbound-interface {
+                        name "pppoe0"
+                    }
+                    protocol "icmpv6"
+                }
+                rule 81 {
+                    action "accept"
+                    icmpv6 {
+                        type-name "mld-listener-report"
+                    }
+                    inbound-interface {
+                        name "pppoe0"
+                    }
+                    protocol "icmpv6"
+                }
+                rule 82 {
+                    action "accept"
+                    icmpv6 {
+                        type-name "mld2-listener-report"
+                    }
+                    inbound-interface {
+                        name "pppoe0"
+                    }
+                }
+                rule 90 {
+                    action "accept"
+                    destination {
+                        port "dhcpv6-client"
+                    }
+                    inbound-interface {
+                        name "pppoe0"
+                    }
+                    protocol "udp"
+                }
+            }
+        }
+    }
+}
+interfaces {
+    bridge br0 {
+        address "192.168.1.1/24"
+        member {
+            interface eth0 {
+            }
+            interface eth1 {
+            }
+        }
+    }
+    bridge br1 {
+        address "192.168.2.1/24"
+        member {
+            interface eth2 {
+            }
+        }
+    }
+    ethernet eth0 {
+        hw-id "52:54:00:ee:63:82"
+    }
+    ethernet eth1 {
+        hw-id "52:54:00:d8:75:19"
+    }
+    ethernet eth2 {
+        hw-id "52:54:00:6f:76:09"
+    }
+    ethernet eth3 {
+        hw-id "52:54:00:2b:e8:f9"
+    }
+    loopback lo {
+    }
+    pppoe pppoe0 {
+        authentication {
+            password "test"
+            username "test"
+        }
+        dhcpv6-options {
+            pd 0 {
+                interface br0 {
+                    sla-id "1"
+                }
+                interface br1 {
+                    sla-id "0"
+                }
+                length "60"
+            }
+        }
+        ipv6 {
+            address {
+                autoconf
+            }
+        }
+        service-name "LOCAL"
+        source-interface "eth3"
+    }
+}
+nat {
+    source {
+        rule 20 {
+            outbound-interface {
+                name "pppoe0"
+            }
+            source {
+                group {
+                    address-group "ALL-V4-SUBNET-ADDRS"
+                }
+            }
+            translation {
+                address "masquerade"
+            }
+        }
+    }
+}
+service {
+    dhcp-server {
+        shared-network-name pubnat1 {
+            subnet 192.168.2.0/24 {
+                default-router "192.168.2.1"
+                range 0 {
+                    start "192.168.2.100"
+                    stop "192.168.2.254"
+                }
+            }
+        }
+        shared-network-name prinat1 {
+            subnet 192.168.1.0/24 {
+                default-router "192.168.1.1"
+                range 0 {
+                    start "192.168.1.100"
+                    stop "192.168.1.254"
+                }
+            }
+        }
+    }
+    dns
+    ntp {
+        allow-client {
+            address "127.0.0.0/8"
+            address "169.254.0.0/16"
+            address "10.0.0.0/8"
+            address "172.16.0.0/12"
+            address "192.168.0.0/16"
+            address "::1/128"
+            address "fe80::/10"
+            address "fc00::/7"
+        }
+        server time1.vyos.net {
+        }
+        server time2.vyos.net {
+        }
+        server time3.vyos.net {
+        }
+    }
+    router-advert {
+        interface br0 {
+            prefix ::/64 {
+            }
+        }
+        interface br1 {
+            prefix ::/64 {
+            }
+        }
+    }
+    ssh {
+        disable-host-validation
+        listen-address "::"
+        listen-address "0.0.0.0"
+    }
+}
+system {
+    config-management {
+        commit-revisions "100"
+    }
+    conntrack {
+        modules {
+            ftp
+            h323
+            nfs
+            pptp
+            sip
+            sqlnet
+            tftp
+        }
+    }
+    console {
+        device ttyS0 {
+        }
+    }
+    host-name "vyos"
+    // wheres login? I guess it's been hidden.
+    syslog {
+        global {
+            facility all {
+                level "info"
+            }
+            facility local7 {
+                level "debug"
+            }
+        }
+    }
+}
+
+
+// Warning: Do not remove the following line.
+// vyos-config-version: "bgp@5:broadcast-relay@1:cluster@2:config-management@1:conntrack@5:conntrack-sync@2:container@2:dhcp-relay@2:dhcp-server@8:dhcpv6-server@1:dns-dynamic@4:dns-forwarding@4:firewall@15:flow-accounting@1:https@6:ids@1:interfaces@32:ipoe-server@3:ipsec@13:isis@3:l2tp@9:lldp@2:mdns@1:monitoring@1:nat@8:nat66@3:ntp@3:openconnect@3:ospf@2:pim@1:policy@8:pppoe-server@10:pptp@5:qos@2:quagga@11:reverse-proxy@1:rip@1:rpki@2:salt@1:snmp@3:ssh@2:sstp@6:system@27:vrf@3:vrrp@4:vyos-accel-ppp@2:wanloadbalance@3:webproxy@2"
+// Release version: 1.4.x

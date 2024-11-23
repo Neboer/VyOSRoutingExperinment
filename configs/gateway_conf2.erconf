@@ -1,0 +1,132 @@
+interfaces {
+    ethernet eth0 {
+        address "3fff:1::1/112"
+        address "100.100.1.1/24"
+        hw-id "52:54:00:87:dc:54"
+    }
+    ethernet eth2 {
+        hw-id "52:54:00:59:4b:f5"
+    }
+    loopback lo {
+    }
+}
+service {
+    dhcp-server {
+        shared-network-name HOSTBR {
+            authoritative
+            subnet 100.100.1.0/24 {
+                client-prefix-length "16"
+                default-router "100.100.1.1"
+                range 0 {
+                    start "100.100.1.10"
+                    stop "100.100.1.20"
+                }
+            }
+        }
+    }
+    dhcpv6-server {
+        shared-network-name HOSTBR6 {
+            subnet 3fff::/29 {
+                address-range {
+                    start 3fff:1::10 {
+                        stop "3fff:1::20"
+                    }
+                }
+            }
+        }
+    }
+    ntp {
+        allow-client {
+            address "127.0.0.0/8"
+            address "169.254.0.0/16"
+            address "10.0.0.0/8"
+            address "172.16.0.0/12"
+            address "192.168.0.0/16"
+            address "::1/128"
+            address "fe80::/10"
+            address "fc00::/7"
+        }
+        server time1.vyos.net {
+        }
+        server time2.vyos.net {
+        }
+        server time3.vyos.net {
+        }
+    }
+    pppoe-server {
+        authentication {
+            local-users {
+                username test {
+                    password "test"
+                }
+            }
+            mode "local"
+        }
+        client-ip-pool v4p1 {
+            range "100.100.2.100-100.100.2.254"
+        }
+        client-ipv6-pool v6p1 {
+            delegate 3fff:4::/48 {
+                delegation-prefix "60"
+            }
+            prefix 3fff:3::/48 {
+            }
+        }
+        default-ipv6-pool "v6p1"
+        default-pool "v4p1"
+        gateway-address "100.100.2.1"
+        interface eth2 {
+        }
+        name-server "100.100.1.1"
+        name-server "3fff:1::2"
+        ppp-options {
+            ipv6 "prefer"
+        }
+    }
+    router-advert {
+        interface eth0 {
+        }
+    }
+    ssh {
+        listen-address "0.0.0.0"
+        listen-address "::"
+    }
+}
+system {
+    config-management {
+        commit-revisions "100"
+    }
+    conntrack {
+        modules {
+            ftp
+            h323
+            nfs
+            pptp
+            sip
+            sqlnet
+            tftp
+        }
+    }
+    console {
+        device ttyS0 {
+            speed "115200"
+        }
+    }
+    host-name "vyos"
+    // wheres login? I guess it's been hidden.
+    syslog {
+        global {
+            facility all {
+                level "info"
+            }
+            facility local7 {
+                level "debug"
+            }
+        }
+    }
+}
+
+
+// Warning: Do not remove the following line.
+// vyos-config-version: "bgp@5:broadcast-relay@1:cluster@2:config-management@1:conntrack@5:conntrack-sync@2:container@2:dhcp-relay@2:dhcp-server@8:dhcpv6-server@1:dns-dynamic@4:dns-forwarding@4:firewall@15:flow-accounting@1:https@6:ids@1:interfaces@32:ipoe-server@3:ipsec@13:isis@3:l2tp@9:lldp@2:mdns@1:monitoring@1:nat@8:nat66@3:ntp@3:openconnect@3:ospf@2:pim@1:policy@8:pppoe-server@10:pptp@5:qos@2:quagga@11:reverse-proxy@1:rip@1:rpki@2:salt@1:snmp@3:ssh@2:sstp@6:system@27:vrf@3:vrrp@4:vyos-accel-ppp@2:wanloadbalance@3:webproxy@2"
+// Release version: 1.4.x
